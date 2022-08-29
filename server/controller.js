@@ -32,7 +32,9 @@ module.exports = {
     approveAppointment: (req, res) => {
         let {apptId} = req.body
     
-        sequelize.query(`*****YOUR CODE HERE*****
+        sequelize.query(`UPDATE cc_appointments
+        SET approved = true
+        WHERE appt_id = ${apptId};
         
         insert into cc_emp_appts (emp_id, appt_id)
         values (${nextEmp}, ${apptId}),
@@ -58,12 +60,40 @@ module.exports = {
             })
     },
     getPendingAppointments: (req, res) => {
-        sequelize.query(`SELECT * FROM `)
+        sequelize.query(`SELECT * FROM cc_appointments
+        WHERE approved = false
+        ORDER BY date DESC;`)
             .then((dbResponse) => {
                 res.status(200).send(dbResponse[0]);
             })
             .catch((err) => {
                 console.log(err);
             })
+    },
+    getPastAppointments: (req, res) => {
+        sequelize.query(`select a.appt_id, a.date, a.service_type, a.approved, a.completed, u.first_name, u.last_name 
+        from cc_appointments a
+        join cc_emp_appts ea on a.appt_id = ea.appt_id
+        join cc_employees e on e.emp_id = ea.emp_id
+        join cc_users u on e.user_id = u.user_id
+        where a.approved = true and a.completed = true
+        order by a.date desc;`)
+        .then(dbResponse => {
+            res.status(200).send(dbResponse[0]);
+        })
+        .catch((err) => {
+            console.log(err);
+        })
+    },
+    completeAppointment: (req, res) => {
+        let {apptId} = req.body;
+        sequelize.query(`UPDATE cc_appointments SET completed = true
+        WHERE appt_id = ${apptId};`)
+        .then(dbResponse => {
+            res.status(200).send(dbResponse[0]);
+        })
+        .catch((err) => {
+            console.log(err);
+        })
     }
 }
